@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #define ROWS 2
 #define COLS 6
@@ -38,45 +37,63 @@ char trocarJogador(char currentPlayer) {
     return (currentPlayer == jogador1) ? jogador2 : jogador1;
 }
 
+// função de captura de pontos
+void capturarPontos(int board[ROWS][COLS], char player, int i, int x) {
+    int linha = i;
+    int coluna = x;
 
-void capturarPontos(int board[ROWS][COLS], char player) {
-    int linha = (player == jogador1) ? 0 : 1;
-    int coluna = COLS - 1;
+    int pedra = board[linha][x];
+    
+    if ((pedra == 2 || pedra == 3)) {
+        if (player == jogador1 && i == 0) {
+            depositoA += pedra;
+            board[i][x] = 0;
+            }
+        } else if ( i = 1 && (player == jogador2 || player == computador)){
+            depositoB += pedra;
+            board[i][x] = 0;                
+            }
 
-    int pedra = board[linha][coluna];
-    if (pedra == 2 || pedra == 3) {
-        if (linha == 1) {
-            depositoA += board[1][coluna];
-            board[1][coluna] = 0;
-        } else {
-            depositoB += board[0][coluna];
-            board[0][coluna] = 0;
+
+
+   while (coluna > 0 && (board[linha][coluna - 1] == 2 || board[linha][coluna - 1] == 3)) {
+        pedra = board[linha][coluna - 1];
+        if (player == jogador1 && i == 0) {
+            depositoA += pedra;
+            board[linha][coluna - 1] = 0;
+        } else if (player == jogador2 && i == 1) {
+            depositoB += pedra;
+            board[linha][coluna - 1] = 0;
         }
+        coluna--;
     }
-    while (coluna > 0 && (board[linha][coluna-1] == 2 || board[linha][coluna-1] == 3)){
-        if (coluna == 1){
-            depositoA+=pedra;
-        }
-        else{
-            depositoB+=pedra;
-        }
-    coluna--;
-    }
+
 }
 
 
 int validarJogada(int board[ROWS][COLS], int i, int j){
-    if (board[i][j] <= 1) {
-        printf("Escolha inválida! \n");
-        return 0;
-    }
-    for (int col = 0; col < COLS; col++) {
-        if (board[i][col] > 1) {
-            return 1; // valida a jogada
+    if(board[i][j] == 1){
+        for (int col = 0; col < COLS; col++) {
+        if (board[i][col] > 1) {    
+            return 0;
         }
     }
-}    
+    return 1;    
+}
+    return 1;
+}
 
+int semPedraNoLado(int board[ROWS][COLS], char player){
+    int linha = (player == jogador1) ? 0 : 1;
+
+   for (int col = 0; col < COLS; col++) {
+        if (board[linha][col] > 0) {
+            return 0; 
+        }
+    }
+
+    return 1; 
+}
 
 //Definir Jogada Jogador
 void jogadareal(int board[ROWS][COLS], char player) {
@@ -92,10 +109,10 @@ void jogadareal(int board[ROWS][COLS], char player) {
         printf("Jogador %c, escolha uma coluna (1-6): ", player);
         scanf("%d", &j);
 
-        if (j < 1 || j > 6 || board[i][j - 1] == 0) {
+        if (j < 1 || j > 6 || board[i][j - 1] == 0 || !validarJogada(board, i, j-1)) {
             printf("Escolha inválida! Tente novamente.\n");
         }
-    } while (j < 1 || j > 6 || board[i][j - 1] == 0);
+    } while (j < 1 || j > 6 || board[i][j - 1] == 0 || !validarJogada(board, i, j-1));
 
     j--;
     int aux = board[i][j];
@@ -122,7 +139,7 @@ void jogadareal(int board[ROWS][COLS], char player) {
         board[i][x]++;
         aux--;
     }
-    capturarPontos(board, player);
+    capturarPontos(board, player, i, x);
 }
  
  
@@ -135,7 +152,7 @@ void jogadacomputador(int coluna, char player) {
     do {
         // Escolhe uma coluna aleatória para o computador
         j = rand() % coluna;
-    } while (board[0][j] == 0);  
+    } while (board[0][j] == 0 || !validarJogada(board, 0, j));  
 
     int i = 0;
     int aux = board[i][j];
@@ -165,7 +182,8 @@ void jogadacomputador(int coluna, char player) {
 
     printf("O computador (%c) escolheu a coluna %d.\n", player, j+1);
 
-    capturarPontos(board, player);    
+    capturarPontos(board, player, i, x); 
+
 }
 
 //escolher PvP ou PvC;
@@ -206,16 +224,16 @@ char checkWinner() {
 //vencedor do jogo
 void gameWinner(char vencedor){
     if(vencedor  == jogador1){
-        printf("Vencedor: Jogador 1!!\n");
+        printf("Vencedor: Jogador 1! Capturou %d pedras!\n", depositoA);
     }
     else if(vencedor == jogador2){
-        printf("Vencedor: Jogador 2!\n");
+        printf("Vencedor: Jogador 2! Capturou %d pedras!\n", depositoB);
     }
     else if(vencedor == computador){
-        printf("Vencedor: Computador!");
+        printf("Vencedor: Computador! Capturou %d pedras!\n", depositoB);
     }
-
 }
+
 
 
 
